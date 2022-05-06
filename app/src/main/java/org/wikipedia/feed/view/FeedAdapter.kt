@@ -40,6 +40,7 @@ class FeedAdapter<T : View>(private val coordinator: FeedCoordinatorBase, privat
 
     private var feedView: FeedView? = null
     private var lastCardReloadTrigger: Card? = null
+    private var firstOffLineCard=false
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DefaultViewHolder<T> {
         return DefaultViewHolder(newView(parent.context, viewType))
@@ -48,10 +49,14 @@ class FeedAdapter<T : View>(private val coordinator: FeedCoordinatorBase, privat
     override fun onBindViewHolder(holder: DefaultViewHolder<T>, position: Int) {
         val item = item(position)
         val view = holder.view as FeedCardView<Card>
+        if (view.card?.type() == CardType.OFFLINE) firstOffLineCard = true
         lastCardReloadTrigger = if (coordinator.finished() &&
             position == itemCount - 1 && item !is OfflineCard && item !is AccessibilityCard &&
-            item !== lastCardReloadTrigger && callback != null) {
-            callback.onRequestMore()
+            item !== lastCardReloadTrigger && callback != null
+        ) {
+            if(firstOffLineCard) {
+                callback.onRequestMore()
+            }
             item
         } else {
             null
